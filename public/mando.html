@@ -152,13 +152,13 @@ function setTouches(p, r) {
   }
   if (p.length) $('#hint').style.display = 'none';
   if (cur.n !== lastN) { lastN = cur.n; queueTouch(1); } // apoyo y liberación: entrega garantizada
-  else queueTouch(0); // el broker público recibe como máximo 30 actualizaciones por segundo
+  else queueTouch(0); // respuesta rápida: hasta 50 actualizaciones por segundo
 }
 function queueTouch(qos) {
   if (qos) { if (touchTimer) clearTimeout(touchTimer); touchTimer = 0; queued = false; sendTouch(1); return; }
   if (queued) return;
   queued = true;
-  touchTimer = setTimeout(() => { touchTimer = 0; queued = false; sendTouch(0); }, Math.max(0, 33 - (performance.now() - lastTouchSent)));
+  touchTimer = setTimeout(() => { touchTimer = 0; queued = false; sendTouch(0); }, Math.max(0, 20 - (performance.now() - lastTouchSent)));
 }
 function sendTouch(qos) { lastTouchSent = performance.now(); pub('touch', { t: Date.now(), n: cur.n, ar: cur.ar, p: cur.p.map(z => ({ i: z.i, x: r3(z.x), y: r3(z.y), f: r3(z.f), d: Math.round(z.d) })) }, qos); }
 
@@ -232,7 +232,7 @@ function mandoHorizontal(e) {
   let target = raw - sideZero;
   if (Math.abs(target) < 3) target = 0; // zona muerta: quita el temblor natural de la mano
   target = clamp(target, -55, 55);
-  sideSmooth += (target - sideSmooth) * 0.16; // filtro suave, 30 lecturas por segundo
+  sideSmooth += (target - sideSmooth) * 0.42; // respuesta ágil; la zona muerta evita el temblor
   return sideSmooth;
 }
 async function askMotion() { // iOS exige permiso explícito desde un gesto; Android no
@@ -254,7 +254,7 @@ function bindMotion() {
     if (!motionOn || !mdirty) return; mdirty = false;
     pub('motion', { t: Date.now(), a: ang && ang.map(r1), r: rot && rot.map(r1), c: acc && acc.map(r2) });
     if (ang) $('#v-motion').textContent = `lateral ${Math.round(ang[2])}°`;
-  }, 33);
+  }, 20);
 }
 
 // ---------- micrófono ----------
