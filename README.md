@@ -5,7 +5,7 @@ Juego audiovisual original de plataformas futuristas para computador controlado 
 ## Cómo jugar
 
 1. Para prueba local, ejecuta `node server.js`.
-2. En el PC abre `https://localhost:8443/exp` y acepta el certificado local.
+2. En el PC abre `https://localhost:8443/` y acepta el certificado local.
 3. Escanea el QR con el S24, acepta el certificado, escribe tu nombre y presiona **Conectar**.
 4. En el teléfono activa **Giro**, **Micrófono** y **Cámara**; concede los permisos cuando Android los pida.
 5. En el PC pulsa **SONIDO: OFF** para activar audio.
@@ -23,6 +23,18 @@ La carpeta `public/` ya es una web estática y el flujo `.github/workflows/pages
 5. Escanea el QR desde iOS o Android; también puedes usar **COPIAR ENLACE DEL S24** si prefieres enviarlo por mensaje. Ambos usarán la misma sala.
 
 En GitHub Pages el QR se genera desde un servicio web y el botón de copia queda como alternativa. La sala se crea con 12 caracteres para evitar cruces accidentales en el broker público.
+
+### Archivos para subir a GitHub
+
+Sube la carpeta del proyecto completa, **excepto** `node_modules/`, `.cert/`, `_v1/`, archivos `.zip` y la carpeta `.git/`. Ya están excluidos por `.gitignore`.
+
+Estos son los archivos y carpetas que debe tener el repositorio:
+
+- `.github/workflows/pages.yml` — publica automáticamente el sitio.
+- `.gitignore`, `README.md`, `package.json`, `package-lock.json` y `server.js` — permiten conservar y ejecutar la versión local.
+- La carpeta completa `public/` — contiene el juego, el mando, estilos, scripts, icono y MQTT para el navegador.
+
+No subas certificados locales ni `node_modules`: GitHub Pages no los necesita y el repositorio se mantiene liviano.
 
 ### iOS y Android
 
