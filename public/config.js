@@ -4,4 +4,7 @@
 const tactoLocal = /^(localhost|127\.0\.0\.1|\d+\.\d+\.\d+\.\d+)$/.test(location.hostname);
 window.TACTO_CONFIG = tactoLocal ? {} : {
   broker: 'wss://broker.emqx.io:8084/mqtt',
+  // Credenciales públicas del broker de demostración EMQX (no son secretas).
+  username: 'emqx',
+  password: 'public',
 };
