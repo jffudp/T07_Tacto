@@ -51,7 +51,7 @@
   async function open({ clientId, will } = {}) {
     await loadMqtt();
     const broker = await resolveBroker();
-    const client = g.mqtt.connect(broker, { clientId: clientId || 'c-' + rand(8), keepalive: 20, reconnectPeriod: 1000, connectTimeout: 8000, clean: true, will, ...auth(broker) });
+    const client = g.mqtt.connect(broker, { clientId: clientId || 'c-' + rand(8), keepalive: 20, reconnectPeriod: 800, connectTimeout: 6000, clean: true, queueQoSZero: false, will, ...auth(broker) });
     return { client, broker };
   }
 
@@ -128,7 +128,7 @@
     async connect() {
       await loadMqtt();
       this.broker = await resolveBroker();
-      const c = (this.client = g.mqtt.connect(this.broker, { clientId: 'exp-' + rand(8), keepalive: 20, reconnectPeriod: 1000, connectTimeout: 8000, clean: true, ...auth(this.broker) }));
+      const c = (this.client = g.mqtt.connect(this.broker, { clientId: 'exp-' + rand(8), keepalive: 20, reconnectPeriod: 800, connectTimeout: 6000, clean: true, queueQoSZero: false, ...auth(this.broker) }));
       c.on('connect', () => { this.setEstado('conectado'); c.subscribe(`tacto/${this.sala}/#`); });
       c.on('reconnect', () => this.setEstado('reconectando'));
       c.on('offline', () => this.setEstado('desconectado'));
@@ -147,7 +147,7 @@
       const [, sala, dev, kind] = topic.split('/');
       if (sala !== this.sala || !dev || !kind) return;
       let m; try { m = JSON.parse(payload.toString()); } catch { return; }
-      const d = (this.devices[dev] ||= { id: dev, name: dev, online: false, last: 0, ch: {}, rtt: [], caps: {} });
+      const d = (this.devices[dev] ||= { id: dev, name: dev, online: false, last: 0, ch: {}, rtt: [], caps: {}, seen: {} });
       if (kind === 'status') {
         d.online = !!m.online; d.name = m.name || dev; d.caps = m.caps || d.caps;
         if (!d.online) { d.ch['touch.n'] = 0; d.ch['touch.down'] = 0; d.ch['touch.f'] = 0; d.ch['touch.d'] = 0; } // sin teléfono no queda nada "apretado"
@@ -155,6 +155,7 @@
       }
       if (kind === 'pong') { d.rtt.push(performance.now() - m.t); if (d.rtt.length > 40) d.rtt.shift(); this.emit('rtt', d); return; }
       if (kind === 'cmd') return;
+      if (typeof m.t === 'number') { if (m.t < (d.seen[kind] || 0)) return; d.seen[kind] = m.t; } // nunca aplicar un gesto viejo tras una reconexión
       d.last = performance.now(); d.online = true;
       flatten(kind, m, d.ch);
       this.emit('datos', d, kind, m);
