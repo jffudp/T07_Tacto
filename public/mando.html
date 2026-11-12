@@ -140,7 +140,7 @@ async function connect() {
 
 // ---------- tacto ----------
 const surf = $('#surface'), cv = $('#cv'), g = cv.getContext('2d');
-let cur = { n: 0, p: [], ar: 1 }, lastN = 0, queued = false;
+let cur = { n: 0, p: [], ar: 1 }, lastN = 0, queued = false, touchTimer = 0, lastTouchSent = 0;
 function fit() { const d = devicePixelRatio || 1, r = surf.getBoundingClientRect(); cv.width = r.width * d; cv.height = r.height * d; g.setTransform(d, 0, 0, d, 0, 0); }
 addEventListener('resize', fit);
 
@@ -151,10 +151,16 @@ function setTouches(p, r) {
     S.d.n++; S.d.min = Math.min(S.d.min, z.d); S.d.max = Math.max(S.d.max, z.d);
   }
   if (p.length) $('#hint').style.display = 'none';
-  if (cur.n !== lastN) { lastN = cur.n; sendTouch(1); } // cambios de cantidad de dedos: entrega garantizada
-  else if (!queued) { queued = true; requestAnimationFrame(() => { queued = false; sendTouch(0); }); } // movimiento: hasta ~60 por segundo
+  if (cur.n !== lastN) { lastN = cur.n; queueTouch(1); } // apoyo y liberación: entrega garantizada
+  else queueTouch(0); // el broker público recibe como máximo 30 actualizaciones por segundo
 }
-const sendTouch = qos => pub('touch', { t: Date.now(), n: cur.n, ar: cur.ar, p: cur.p.map(z => ({ i: z.i, x: r3(z.x), y: r3(z.y), f: r3(z.f), d: Math.round(z.d) })) }, qos);
+function queueTouch(qos) {
+  if (qos) { if (touchTimer) clearTimeout(touchTimer); touchTimer = 0; queued = false; sendTouch(1); return; }
+  if (queued) return;
+  queued = true;
+  touchTimer = setTimeout(() => { touchTimer = 0; queued = false; sendTouch(0); }, Math.max(0, 33 - (performance.now() - lastTouchSent)));
+}
+function sendTouch(qos) { lastTouchSent = performance.now(); pub('touch', { t: Date.now(), n: cur.n, ar: cur.ar, p: cur.p.map(z => ({ i: z.i, x: r3(z.x), y: r3(z.y), f: r3(z.f), d: Math.round(z.d) })) }, qos); }
 
 // Dedos (Touch Events: traen presión y radio de contacto)
 const slots = new Map(); // identifier -> casilla 1..5 (estable mientras el dedo siga apoyado)
@@ -179,6 +185,7 @@ function onTouch(e) {
 ['touchstart', 'touchmove', 'touchend', 'touchcancel'].forEach(n => surf.addEventListener(n, onTouch, { passive: false }));
 ['gesturestart', 'gesturechange'].forEach(n => document.addEventListener(n, e => e.preventDefault()));
 surf.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('visibilitychange', () => { if (document.visibilityState !== 'visible') { slots.clear(); setTouches([], surf.getBoundingClientRect()); } });
 
 // Ratón o lápiz (para probar desde un computador)
 const ptrs = new Map();
@@ -265,7 +272,7 @@ async function startMic() {
     $('#v-mic').textContent = '█'.repeat(Math.round(l * 6)) || '·';
   }, 50);
 }
-function stopMic() { clearInterval(micTimer); micStream?.getTracks().forEach(t => t.stop()); micCtx?.close(); micStream = micCtx = null; }
+function stopMic() { clearInterval(micTimer); pub('mic', { t: Date.now(), l: 0, b: [0, 0, 0] }, 1); micStream?.getTracks().forEach(t => t.stop()); micCtx?.close(); micStream = micCtx = null; }
 
 // ---------- cámara: movimiento y brillo calculados en el teléfono (no sale video) ----------
 let camStream, camTimer, prev = null;
@@ -288,7 +295,7 @@ async function startCam() {
     prev = gray;
   }, 80);
 }
-function stopCam() { clearInterval(camTimer); camStream?.getTracks().forEach(t => t.stop()); camStream = null; }
+function stopCam() { clearInterval(camTimer); pub('cam', { t: Date.now(), m: 0, x: .5, y: .5, b: 0 }, 1); camStream?.getTracks().forEach(t => t.stop()); camStream = null; }
 
 // ---------- botones ----------
 const setOn = (id, on) => { $(id).classList.toggle('active', on); $(id).setAttribute('aria-pressed', on); };
