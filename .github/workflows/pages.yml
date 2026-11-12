@@ -1,4 +1,4 @@
-# Publica la carpeta public/ en GitHub Pages cada vez que subes cambios a main.
+# Publica NEON SALVAGE desde la carpeta public/ cada vez que subes cambios a main.
 # Activación (una sola vez): Settings → Pages → Build and deployment → Source: "GitHub Actions".
 name: Publicar en GitHub Pages
 on:
