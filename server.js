@@ -32,7 +32,7 @@ const app = express();
 const pub = path.join(__dirname, 'public');
 app.use(express.static(pub));
 app.use('/vendor', express.static(path.join(__dirname, 'node_modules', 'mqtt', 'dist'))); // mqtt.min.js sin depender de internet
-app.get('/exp', (_, res) => res.sendFile(path.join(pub, 'exp.html')));
+app.get('/exp', (_, res) => res.sendFile(path.join(pub, 'index.html')));
 app.get('/info', (_, res) => res.json({ baseUrl, mqtt: true, mqttTcp: MQTT_TCP || null }));
 app.get('/qr.svg', async (req, res) => {
   const u = String(req.query.u || baseUrl).slice(0, 400);

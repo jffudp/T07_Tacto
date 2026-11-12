@@ -19,7 +19,7 @@ La carpeta `public/` ya es una web estática y el flujo `.github/workflows/pages
 1. Crea un repositorio en GitHub y sube esta carpeta.
 2. En **Settings → Pages**, selecciona **GitHub Actions** como fuente de publicación.
 3. Envía los cambios a la rama `main`.
-4. Abre `https://TU-USUARIO.github.io/TU-REPOSITORIO/exp.html` en el PC.
+4. Abre `https://TU-USUARIO.github.io/TU-REPOSITORIO/` en el PC.
 5. Escanea el QR desde iOS o Android; también puedes usar **COPIAR ENLACE DEL S24** si prefieres enviarlo por mensaje. Ambos usarán la misma sala.
 
 En GitHub Pages el QR se genera desde un servicio web y el botón de copia queda como alternativa. La sala se crea con 12 caracteres para evitar cruces accidentales en el broker público.
@@ -54,8 +54,8 @@ La gráfica se dibuja por canvas y el sonido se genera con Web Audio API; no uti
 
 ## Archivos
 
-- `public/exp.html`: pantalla de juego del PC.
+- `public/index.html`: pantalla de juego del PC.
 - `public/exp.js`: mecánicas, gráficos, sonido y conexión MQTT.
-- `public/index.html`: mando/sensores del teléfono.
+- `public/mando.html`: mando/sensores del teléfono.
 - `public/tacto.js`: librería MQTT compartida.
 - `server.js`: servidor HTTPS y broker MQTT local.
